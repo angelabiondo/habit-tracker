@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit & Health Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="loading-styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    
+    <!-- Firebase v9 SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyDG520qKmdyidAkNnpLSRxA9uf5gy3voq8",
+          authDomain: "habit-tracker-9bf3d.firebaseapp.com",
+          projectId: "habit-tracker-9bf3d",
+          storageBucket: "habit-tracker-9bf3d.firebasestorage.app",
+          messagingSenderId: "446564357313",
+          appId: "1:446564357313:web:b79043d46b6a93aca73040",
+          measurementId: "G-WWTX0FQ52B"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Make Firebase available globally
+        window.firebaseApp = app;
+        window.db = db;
+        window.firestore = { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where };
+    </script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">Health & Habit Tracker</h1>
+            <p class="subtitle">Track your journey to better health</p>
+        </header>
+
+        <nav class="navigation">
+            <button class="nav-btn active" data-section="today">Today</button>
+            <button class="nav-btn" data-section="log">Add Entry</button>
+            <button class="nav-btn" data-section="quiz">Bedtime Quiz</button>
+            <button class="nav-btn" data-section="insights">Insights</button>
+            <button class="nav-btn" data-section="data">Data View</button>
+            <button class="nav-btn" data-section="history">History</button>
+        </nav>
+
+        <!-- Today Section -->
+        <section id="today" class="section active">
+            <div class="today-overview">
+                <h2>Today's Overview</h2>
+                <div class="date-display" id="todayDate"></div>
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="todayHealth">-</div>
+                        <div class="stat-label">Health Rating</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="todayDigestion">-</div>
+                        <div class="stat-label">Digestion</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="todayGym">-</div>
+                        <div class="stat-label">Gym Session</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="todaySleep">-</div>
+                        <div class="stat-label">Sleep Quality</div>
+                    </div>
+                </div>
+                <div class="today-entries" id="todayEntries">
+                    <p class="no-data">No entries for today. <a href="#" onclick="showSection('log')">Add your first entry</a></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Log Entry Section -->
+        <section id="log" class="section">
+            <div class="log-form">
+                <h2>Add Entry</h2>
+                <form id="entryForm">
+                    <div class="form-group">
+                        <label for="entryDate">Date</label>
+                        <input type="date" id="entryDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="healthRating">Health Rating (1-10)</label>
+                        <div class="rating-input">
+                            <input type="range" id="healthRating" min="1" max="10" value="5">
+                            <span class="rating-value" id="healthRatingValue">5</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="whatIAte">What I Ate Today</label>
+                        <textarea id="whatIAte" placeholder="Detailed list of meals and foods consumed today"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dietNotes">Diet Notes</label>
+                        <textarea id="dietNotes" placeholder="Additional diet observations, reactions, etc."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="triggers">Potential Triggers</label>
+                        <input type="text" id="triggers" placeholder="Foods, activities, or factors that might affect your health">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newFoods">New Foods Introduced</label>
+                        <input type="text" id="newFoods" placeholder="List any new foods you tried today">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="digestion">Digestion Quality (1-10)</label>
+                        <div class="rating-input">
+                            <input type="range" id="digestion" min="1" max="10" value="5">
+                            <span class="rating-value" id="digestionValue">5</span>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Skin Status (1 = Worst, 10 = Clear)</h3>
+                        
+                        <div class="form-group">
+                            <label for="skinHands">Hands</label>
+                            <div class="rating-input">
+                                <input type="range" id="skinHands" min="1" max="10" value="5">
+                                <span class="rating-value" id="skinHandsValue">5</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="skinArms">Arms</label>
+                            <div class="rating-input">
+                                <input type="range" id="skinArms" min="1" max="10" value="5">
+                                <span class="rating-value" id="skinArmsValue">5</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="skinStomachBack">Stomach/Back</label>
+                            <div class="rating-input">
+                                <input type="range" id="skinStomachBack" min="1" max="10" value="5">
+                                <span class="rating-value" id="skinStomachBackValue">5</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="skinThighs">Thighs</label>
+                            <div class="rating-input">
+                                <input type="range" id="skinThighs" min="1" max="10" value="5">
+                                <span class="rating-value" id="skinThighsValue">5</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="skinLegsFeet">Legs/Feet</label>
+                            <div class="rating-input">
+                                <input type="range" id="skinLegsFeet" min="1" max="10" value="5">
+                                <span class="rating-value" id="skinLegsFeetValue">5</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newSpots">New Spots Appeared?</label>
+                            <select id="newSpots">
+                                <option value="">Select</option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newSpotsNotes">New Spots Notes</label>
+                            <textarea id="newSpotsNotes" placeholder="Location, size, appearance of new spots"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="existingSpotsChange">Changes in Existing Spots</label>
+                            <textarea id="existingSpotsChange" placeholder="Any changes in existing spots - better, worse, color, size, etc."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Weight & Physical</h3>
+                        
+                        <div class="form-group">
+                            <label for="weight">Weight (kg)</label>
+                            <input type="number" id="weight" step="0.1" placeholder="75.5">
+                            <small class="field-hint">Leave empty if you didn't weigh yourself today</small>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Supplements & Treatments</h3>
+                        
+                        <div class="supplements-grid">
+                            <div class="supplement-item">
+                                <label for="omega3">Omega 3</label>
+                                <select id="omega3">
+                                    <option value="">-</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+
+                            <div class="supplement-item">
+                                <label for="melatonin">Melatonin</label>
+                                <select id="melatonin">
+                                    <option value="">-</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+
+                            <div class="supplement-item">
+                                <label for="creatine">Creatine</label>
+                                <select id="creatine">
+                                    <option value="">-</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+
+                            <div class="supplement-item">
+                                <label for="finasteride">Finasteride</label>
+                                <select id="finasteride">
+                                    <option value="">-</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+
+                            <div class="supplement-item">
+                                <label for="minoxidil">Applied Minoxidil</label>
+                                <select id="minoxidil">
+                                    <option value="">-</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+
+                            <div class="supplement-item">
+                                <label for="diacladerm">Diacladerm</label>
+                                <select id="diacladerm">
+                                    <option value="">-</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+
+                            <div class="supplement-item">
+                                <label for="karela">Karela</label>
+                                <select id="karela">
+                                    <option value="">-</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gymSession">Gym Session</label>
+                        <select id="gymSession">
+                            <option value="">No gym session</option>
+                            <option value="light">Light workout</option>
+                            <option value="moderate">Moderate workout</option>
+                            <option value="intense">Intense workout</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="gymTypeGroup" style="display: none;">
+                        <label for="gymType">Workout Type</label>
+                        <select id="gymType">
+                            <option value="">Select type</option>
+                            <option value="push">Push (Chest, Shoulders, Triceps)</option>
+                            <option value="pull">Pull (Back, Biceps)</option>
+                            <option value="legs">Legs (Quads, Hamstrings, Glutes, Calves)</option>
+                            <option value="cardio">Cardio</option>
+                            <option value="full-body">Full Body</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gymNotes">Gym Notes</label>
+                        <textarea id="gymNotes" placeholder="Exercises, duration, how you felt"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="symptoms">Symptoms</label>
+                        <input type="text" id="symptoms" placeholder="Any symptoms experienced today">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mood">Mood</label>
+                        <select id="mood">
+                            <option value="">Select mood</option>
+                            <option value="excellent">Excellent</option>
+                            <option value="good">Good</option>
+                            <option value="okay">Okay</option>
+                            <option value="poor">Poor</option>
+                            <option value="terrible">Terrible</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sleepDuration">Sleep Duration (hours)</label>
+                        <input type="number" id="sleepDuration" min="0" max="24" step="0.5" placeholder="8.5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sleepQuality">Sleep Quality (1-10)</label>
+                        <div class="rating-input">
+                            <input type="range" id="sleepQuality" min="1" max="10" value="5">
+                            <span class="rating-value" id="sleepQualityValue">5</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sleepNotes">Sleep Notes</label>
+                        <textarea id="sleepNotes" placeholder="Sleep schedule, issues, dreams, etc."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Additional Notes</label>
+                        <textarea id="notes" placeholder="Any other observations or notes"></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Save Entry</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Bedtime Quiz Section -->
+        <section id="quiz" class="section">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h2>🌙 Bedtime Health Quiz</h2>
+                    <p class="quiz-subtitle">Let's review your day together, one question at a time</p>
+                    <div class="quiz-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span class="progress-text" id="progressText">Question 1 of 20</span>
+                    </div>
+                </div>
+
+                <div class="quiz-content">
+                    <!-- Welcome Screen -->
+                    <div class="quiz-screen active" id="welcomeScreen">
+                        <div class="quiz-welcome">
+                            <div class="quiz-icon">🌟</div>
+                            <h3>Ready for your daily reflection?</h3>
+                            <p>I'll ask you some questions about your day to help track your health journey. This should take about 2-3 minutes.</p>
+                            <button class="quiz-btn primary" onclick="startQuiz()">
+                                <span>Start Quiz</span>
+                                <div class="btn-icon">→</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Question Screen -->
+                    <div class="quiz-screen" id="questionScreen">
+                        <div class="question-container">
+                            <div class="question-header">
+                                <div class="question-icon" id="questionIcon">❓</div>
+                                <h3 class="question-title" id="questionTitle">Question Title</h3>
+                                <p class="question-subtitle" id="questionSubtitle">Question description</p>
+                            </div>
+                            
+                            <div class="question-input" id="questionInput">
+                                <!-- Dynamic input will be inserted here -->
+                            </div>
+
+                            <div class="quiz-navigation">
+                                <button class="quiz-btn secondary" id="prevBtn" onclick="previousQuestion()" style="display: none;">
+                                    <div class="btn-icon">←</div>
+                                    <span>Previous</span>
+                                </button>
+                                <button class="quiz-btn primary" id="nextBtn" onclick="nextQuestion()">
+                                    <span>Next</span>
+                                    <div class="btn-icon">→</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Screen -->
+                    <div class="quiz-screen" id="summaryScreen">
+                        <div class="quiz-summary">
+                            <div class="quiz-icon">✨</div>
+                            <h3>Great job! Here's your day summary:</h3>
+                            <div class="summary-cards" id="summaryCards">
+                                <!-- Summary cards will be generated here -->
+                            </div>
+                            <div class="quiz-actions">
+                                <button class="quiz-btn secondary" onclick="restartQuiz()">
+                                    <div class="btn-icon">🔄</div>
+                                    <span>Retake Quiz</span>
+                                </button>
+                                <button class="quiz-btn primary" onclick="saveQuizEntry()">
+                                    <span>Save Entry</span>
+                                    <div class="btn-icon">💾</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Insights Section -->
+        <section id="insights" class="section">
+            <div class="insights-container">
+                <h2>Insights & Analytics</h2>
+                
+                <div class="insights-controls">
+                    <div class="chart-mode-selector">
+                        <label>Chart Mode:</label>
+                        <div class="mode-buttons">
+                            <button class="mode-btn active" data-mode="single" onclick="switchChartMode('single')">Single Chart</button>
+                            <button class="mode-btn" data-mode="multi" onclick="switchChartMode('multi')">Multi-Chart Correlation</button>
+                        </div>
+                    </div>
+                    
+                    <div id="singleChartControls" class="chart-controls">
+                        <div class="chart-selector">
+                            <label for="chartType">Select Chart:</label>
+                            <select id="chartType" onchange="updateSelectedChart()">
+                                <option value="health">Health Rating Trend</option>
+                                <option value="digestion">Digestion Quality</option>
+                                <option value="sleep">Sleep Quality & Duration</option>
+                                <option value="skin">Skin Status Trend</option>
+                                <option value="weight">Weight Tracking</option>
+                                <option value="mood">Mood Distribution</option>
+                                <option value="gym">Gym Activity</option>
+                                <option value="correlation">Health Correlations</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="multiChartControls" class="chart-controls" style="display: none;">
+                        <div class="metrics-selector">
+                            <label>Select Metrics to Display:</label>
+                            <div class="metrics-grid">
+                                <div class="metric-checkbox">
+                                    <input type="checkbox" id="showHealth" checked onchange="updateMultiChart()">
+                                    <label for="showHealth" class="metric-label" style="color: #667eea;">● Health Rating</label>
+                                </div>
+                                <div class="metric-checkbox">
+                                    <input type="checkbox" id="showDigestion" onchange="updateMultiChart()">
+                                    <label for="showDigestion" class="metric-label" style="color: #48bb78;">● Digestion Quality</label>
+                                </div>
+                                <div class="metric-checkbox">
+                                    <input type="checkbox" id="showSleepQuality" onchange="updateMultiChart()">
+                                    <label for="showSleepQuality" class="metric-label" style="color: #805ad5;">● Sleep Quality</label>
+                                </div>
+                                <div class="metric-checkbox">
+                                    <input type="checkbox" id="showSkinHands" onchange="updateMultiChart()">
+                                    <label for="showSkinHands" class="metric-label" style="color: #f56565;">● Skin (Hands)</label>
+                                </div>
+                                <div class="metric-checkbox">
+                                    <input type="checkbox" id="showSkinArms" onchange="updateMultiChart()">
+                                    <label for="showSkinArms" class="metric-label" style="color: #ed8936;">● Skin (Arms)</label>
+                                </div>
+                                <div class="metric-checkbox">
+                                    <input type="checkbox" id="showSkinStomachBack" onchange="updateMultiChart()">
+                                    <label for="showSkinStomachBack" class="metric-label" style="color: #ecc94b;">● Skin (Stomach/Back)</label>
+                                </div>
+                                <div class="metric-checkbox">
+                                    <input type="checkbox" id="showSkinThighs" onchange="updateMultiChart()">
+                                    <label for="showSkinThighs" class="metric-label" style="color: #38b2ac;">● Skin (Thighs)</label>
+                                </div>
+                                <div class="metric-checkbox">
+                                    <input type="checkbox" id="showSkinLegsFeet" onchange="updateMultiChart()">
+                                    <label for="showSkinLegsFeet" class="metric-label" style="color: #9f7aea;">● Skin (Legs/Feet)</label>
+                                </div>
+                            </div>
+                            <div class="metrics-actions">
+                                <button class="metrics-btn" onclick="selectAllMetrics()">Select All</button>
+                                <button class="metrics-btn" onclick="clearAllMetrics()">Clear All</button>
+                                <button class="metrics-btn" onclick="selectSkinMetrics()">Skin Only</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="time-range">
+                        <label for="timeRange">Time Range:</label>
+                        <select id="timeRange" onchange="updateCurrentChart()">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="365">Last year</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-container main-chart">
+                        <h3 id="mainChartTitle">Health Rating Trend</h3>
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>Weekly Summary</h3>
+                        <div class="summary-stats" id="summaryStats">
+                            <div class="summary-item">
+                                <span class="summary-label">Average Health Rating:</span>
+                                <span class="summary-value" id="avgHealth">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Average Sleep Quality:</span>
+                                <span class="summary-value" id="avgSleep">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Gym Sessions This Week:</span>
+                                <span class="summary-value" id="weeklyGym">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Most Common Triggers:</span>
+                                <span class="summary-value" id="commonTriggers">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data View Section -->
+        <section id="data" class="section">
+            <div class="data-container">
+                <h2>Data View</h2>
+                <div class="data-controls">
+                    <div class="view-options">
+                        <button class="view-btn active" data-view="table" onclick="switchDataView('table')">Table View</button>
+                        <button class="view-btn" data-view="calendar" onclick="switchDataView('calendar')">Calendar View</button>
+                    </div>
+                    <div class="data-filters">
+                        <select id="dataColumnFilter" onchange="updateDataView()">
+                            <option value="all">All Columns</option>
+                            <option value="health">Health & Wellness</option>
+                            <option value="diet">Diet & Digestion</option>
+                            <option value="activity">Activity & Sleep</option>
+                        </select>
+                    </div>
+                    <div class="data-export">
+                        <button id="exportCsvBtn" class="export-btn">Export as CSV</button>
+                        <button id="exportXlsxBtn" class="export-btn">Export as XLSX</button>
+                    </div>
+                </div>
+                <div class="data-view-container">
+                    <div id="tableView" class="data-view active">
+                        <div class="table-container">
+                            <table id="dataTable">
+                                <thead id="tableHead"></thead>
+                                <tbody id="tableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="calendarView" class="data-view">
+                        <div class="calendar-container" id="calendarContainer">
+                            <!-- Calendar will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section id="history" class="section">
+            <div class="history-container">
+                <h2>Entry History</h2>
+                <div class="history-filters">
+                    <input type="month" id="historyFilter" onchange="filterHistory()">
+                    <button onclick="clearHistoryFilter()" class="filter-clear">Show All</button>
+                </div>
+                <div class="history-list" id="historyList">
+                    <p class="no-data">No entries found.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
