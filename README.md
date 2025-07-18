@@ -153,3 +153,18 @@ Potential features for future versions:
 ---
 
 **Note**: This application runs entirely in your browser and requires no installation or server setup. Your data privacy is maintained as nothing is transmitted over the internet.
+
+# Habit Tracker
+
+A simple habit tracker web app.
+
+## Structure
+
+- `public/`: Static files (HTML, images, etc.)
+- `src/`: Source code and styles
+
+## How to use
+
+Open `public/index.html` in your browser to use the app.
+
+All logic and styles are in the `src/` folder.

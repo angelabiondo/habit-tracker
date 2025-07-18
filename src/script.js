@@ -1,0 +1,3 @@
+// Moved from project root
+// Main JavaScript logic for the Habit Tracker app.
+// ...existing code from your original script.js...

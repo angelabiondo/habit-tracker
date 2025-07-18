@@ -1103,7 +1103,7 @@ class HealthTracker {
                     ${entry.digestion ? `<div class="entry-detail"><strong>Digestion:</strong> ${entry.digestion}/10</div>` : ''}
                     ${this.getSkinSummary(entry) ? `<div class="entry-detail"><strong>Skin Status:</strong> ${this.getSkinSummary(entry)}</div>` : ''}
                     ${entry.newSpots && entry.newSpots !== '' ? `<div class="entry-detail"><strong>New Spots:</strong> ${entry.newSpots}</div>` : ''}
-                    ${entry.weight ? `<div class="entry-detail"><strong>Weight:</strong> ${entry.weight}kg</div>` : ''}
+                    ${entry.weight ? `<div class="entry-detail"><strong>Weight:</strong> ${entry.weight}lb</div>` : ''}
                     ${this.getSupplementsSummary(entry) ? `<div class="entry-detail"><strong>Supplements:</strong> ${this.getSupplementsSummary(entry)}</div>` : ''}
                     ${entry.triggers ? `<div class="entry-detail"><strong>Triggers:</strong> ${entry.triggers}</div>` : ''}
                     ${entry.gymSession ? `<div class="entry-detail"><strong>Gym:</strong> ${entry.gymSession}${entry.gymType ? ` (${entry.gymType})` : ''}</div>` : ''}
@@ -1602,7 +1602,7 @@ class HealthTracker {
             data: {
                 labels: weightData.labels,
                 datasets: [{
-                    label: 'Weight (kg)',
+                    label: 'Weight (lb)',
                     data: weightData.data,
                     borderColor: '#9f7aea',
                     backgroundColor: '#9f7aea20',
@@ -1625,7 +1625,7 @@ class HealthTracker {
                     y: {
                         title: {
                             display: true,
-                            text: 'Weight (kg)'
+                            text: 'Weight (lb)'
                         }
                     }
                 }
@@ -2097,7 +2097,7 @@ class HealthTracker {
                     ${entry.weight ? `
                         <div class="history-field">
                             <div class="history-field-label">Weight</div>
-                            <div class="history-field-value">${entry.weight}kg</div>
+                            <div class="history-field-value">${entry.weight}lb</div>
                         </div>
                     ` : ''}
                     ${this.getSupplementsSummary(entry) ? `
@@ -2449,8 +2449,8 @@ class HealthTracker {
                 subtitle: 'Enter your weight if you stepped on the scale',
                 type: 'number',
                 field: 'weight',
-                placeholder: '75.5',
-                step: '0.1'
+                placeholder: '140lb',
+                step: '0.01'
             },
             {
                 id: 'supplements',
@@ -2534,7 +2534,7 @@ class HealthTracker {
                 type: 'number',
                 field: 'sleepDuration',
                 placeholder: '8.5',
-                step: '0.1',
+                step: '0.01',
                 min: '0',
                 max: '24'
             },
@@ -2804,7 +2804,7 @@ class HealthTracker {
             {
                 icon: '⚖️',
                 title: 'Weight',
-                value: this.quizData.weight ? `${this.quizData.weight}kg` : '-'
+                value: this.quizData.weight ? `${this.quizData.weight}lb` : '-'
             }
         ];
 
