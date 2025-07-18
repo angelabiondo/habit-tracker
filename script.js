@@ -2534,7 +2534,7 @@ class HealthTracker {
                 type: 'number',
                 field: 'sleepDuration',
                 placeholder: '8.5',
-                step: '0.5',
+                step: '0.1',
                 min: '0',
                 max: '24'
             },
