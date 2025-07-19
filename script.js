@@ -899,7 +899,7 @@ class HealthTracker {
             this.updateTodayView();
             this.updateHistory();
             this.updateDataView();
-            // this.clearForm();
+            this.clearForm();
             this.showSection('today');
             
         } catch (error) {
