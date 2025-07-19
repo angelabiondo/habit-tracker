@@ -1,0 +1,7 @@
+/* Main CSS entry point: import all partials here */
+@import './base.css';
+@import './layout.css';
+@import './header.css';
+@import './navigation.css';
+@import './section.css';
+/* Add more imports as you split more sections */
